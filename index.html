@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <title>NS PREMIUM VIP • CONTROL PANEL</title>
+    <style>
+        /* RESET + FULLSCREEN BASE */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000000;
+            font-family: 'Rajdhani', sans-serif;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        /* ----- IFRAME FIX ----- */
+        #game-frame {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+            z-index: 1;
+            touch-action: pan-x pan-y;
+            -webkit-overflow-scrolling: auto;
+            overflow: hidden;
+        }
+        
+        /* COMPACT DRAGGABLE PANEL */
+        #drag-container {
+            position: fixed;
+            top: 10%;
+            left: 10px;
+            z-index: 9999;
+            cursor: grab;
+            touch-action: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            filter: drop-shadow(0 0 8px rgba(157, 78, 221, 0.4));
+            will-change: transform;
+            width: 195px;
+        }
+
+        #drag-container:active {
+            cursor: grabbing;
+        }
+
+        /* PREMIUM VIOLET BORDER */
+        .neon-border {
+            position: relative;
+            padding: 1.5px;
+            overflow: hidden;
+            border-radius: 12px;
+            background: #000;
+            width: 100%;
+        }
+
+        .neon-border::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(#ff007f, #7b2cbf, #9d4edd, #ff0055, #7b2cbf);
+            animation: rotate 3s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes rotate {
+            100% { transform: rotate(360deg); }
+        }
+
+        .hack-box {
+            background: rgba(12, 5, 20, 0.93);
+            backdrop-filter: blur(6px);
+            border-radius: 11px;
+            position: relative;
+            z-index: 5;
+            width: 100%;
+            padding: 8px;
+            box-shadow: inset 0 0 8px rgba(157, 78, 221, 0.3);
+        }
+
+        /* HEADER */
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(157, 78, 221, 0.2);
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+        }
+
+        .title {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            background: linear-gradient(45deg, #ff007f, #e0aaff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .title::before {
+            content: '';
+            display: inline-block;
+            width: 5px;
+            height: 5px;
+            background: #00ff66;
+            border-radius: 50%;
+            box-shadow: 0 0 4px #00ff66;
+        }
+
+        /* PERIOD & TIMER ROW */
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 4px 6px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            font-family: 'Orbitron', monospace;
+            font-size: 8.5px;
+        }
+        #full-id { color: #c8b6ff; font-weight: bold; }
+        #timer-num { color: #00ffcc; font-weight: 900; text-shadow: 0 0 4px #00ffcc; }
+
+        /* PREDICTION AREA */
+        .predict-area {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(157, 78, 221, 0.15);
+            border-radius: 8px;
+            padding: 6px;
+            text-align: center;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .res-bs {
+            font-size: 24px;
+            font-weight: 900;
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 1px;
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+
+        .res-col {
+            font-size: 8.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 10px;
+            color: #fff;
+        }
+
+        /* DASHBOARD GRID */
+        .dash-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-bottom: 8px;
+        }
+
+        .grid-box {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            padding: 4px;
+            font-size: 8.5px;
+        }
+
+        .box-title {
+            font-size: 8px;
+            color: #7b2cbf;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+
+        /* HISTORY */
+        .hist-item {
+            font-family: 'Orbitron', monospace;
+            display: flex;
+            justify-content: space-between;
+            color: #bbb;
+            margin-bottom: 1px;
+        }
+
+        /* ACCURACY */
+        .accuracy-val {
+            font-family: 'Orbitron', monospace;
+            font-size: 14px;
+            font-weight: 900;
+            color: #fff;
+            text-align: center;
+        }
+        .safe-tag {
+            font-size: 7.5px;
+            color: #00ff66;
+            text-align: center;
+            font-weight: bold;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 2px;
+            background: #240046;
+            border-radius: 1px;
+            overflow: hidden;
+            margin-top: 2px;
+        }
+        .progress-fill {
+            width: 50%;
+            height: 100%;
+            background: #00ff66;
+            animation: fake-load 1.5s infinite linear;
+        }
+        @keyframes fake-load {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+
+        /* TREND FOOTER */
+        .trend-footer {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            padding: 4px 6px;
+            font-size: 8.5px;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            margin-bottom: 8px;
+        }
+        .trend-line { display: flex; justify-content: space-between; }
+        .trend-lbl { color: #9d4edd; }
+        .trend-val { color: #fff; }
+
+        /* LOGIN FORM */
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid #7b2cbf;
+            background: #03070f;
+            color: #fff;
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #9d4edd;
+            box-shadow: 0 0 5px #9d4edd;
+        }
+
+        /* BUTTONS */
+        button.action-btn {
+            background: linear-gradient(95deg, #7b2cbf, #ff007f);
+            color: white;
+            border: none;
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 9px;
+            cursor: pointer;
+            font-weight: 800;
+            width: 100%;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+
+        /* GET PIN BUTTON */
+        .get-pin-btn {
+            background: linear-gradient(135deg, #00b4db, #0083b0);
+            color: #fff;
+            border: none;
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 9px;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            width: 100%;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+
+        button:active { transform: scale(0.97); }
+
+        /* WAITING OVERLAY */
+        .waiting {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 7, 27, 0.98);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 9px;
+            color: #ffcc00;
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
+            animation: blink 0.7s infinite alternate;
+            display: none;
+        }
+
+        @keyframes blink { 0% { opacity: 1; } 100% { opacity: 0.5; } }
+
+        /* TOAST */
+        .toast-alert {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff004ccc;
+            backdrop-filter: blur(8px);
+            color: white;
+            padding: 6px 15px;
+            border-radius: 50px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 10px;
+            z-index: 10000;
+            animation: fadeUp 1.5s ease forwards;
+        }
+
+        @keyframes fadeUp {
+            0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(0px); }
+            85% { opacity: 1; transform: translateX(-50%) translateY(0px); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-15px); visibility: hidden; }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body oncontextmenu="return false">
+
+    <iframe id="game-frame" 
+            src="https://dkwin9.com/#/register?invitationCode=266461765691" 
+            sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-top-navigation-by-user-activation allow-downloads"
+            referrerpolicy="no-referrer"
+            loading="eager">
+    </iframe>
+
+    <div id="drag-container">
+        <div class="neon-border">
+            <div class="hack-box">
+                
+                <div class="panel-header">
+                    <div class="title">NS PREMIUM</div>
+                    <div style="color: #9d4edd; font-size: 8px; font-weight: bold;">VIP</div>
+                </div>
+
+                <div id="login-form" class="login-container">
+                    <input type="password" id="pin" placeholder="ENTER SECRET PIN" autocomplete="off">
+                    <button class="action-btn" onclick="activate()">🔓 ACTIVATE HACK</button>
+                    <button class="get-pin-btn" onclick="window.open('https://t.me/NSsajid', '_blank')">🔑 GET PIN</button>
+                </div>
+
+                <div id="res-area" style="display:none">
+                    
+                    <div class="status-row">
+                        <div id="full-id">ID: LOADING...</div>
+                        <div id="timer-num">00</div>
+                    </div>
+
+                    <div class="predict-area">
+                        <div id="resBS" class="res-bs">---</div>
+                        <div id="resCol" class="res-col">---</div>
+                        <div id="wait-msg" class="waiting">📡 ANALYZING SIGNAL...</div>
+                    </div>
+
+                    <div class="dash-grid">
+                        <div class="grid-box">
+                            <div class="box-title">📜 HISTORY</div>
+                            <div id="fake-hist-list"></div>
+                        </div>
+                        <div class="grid-box" style="display: flex; flex-direction: column; justify-content: center;">
+                            <div class="box-title" style="text-align:center;">🎯 ACCURACY</div>
+                            <div class="accuracy-val">97.3%</div>
+                            <div class="safe-tag">✓ SAFE</div>
+                            <div class="progress-bar"><div class="progress-fill"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="trend-footer">
+                        <div class="trend-line"><span class="trend-lbl">TREND:</span><span id="trend-val" class="trend-val">---</span></div>
+                        <div class="trend-line"><span class="trend-lbl">SUGGEST:</span><span id="suggest-val" class="trend-val">---</span></div>
+                        <div class="trend-line"><span class="trend-lbl">RISK:</span><span style="color: #00ff66;">LOW</span></div>
+                    </div>
+
+                    <button class="action-btn" onclick="window.open('https://t.me/NexJobGlobal', '_blank')">🔵 JOIN VIP SIGNALS</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // PASSWORD PROTECTION
+        function activate() {
+            const pinInput = document.getElementById('pin');
+            const pinValue = pinInput.value.trim();
+            let isValid = false;
+            try {
+                if (pinValue === "Nssajid") { 
+                    isValid = true;
+                }
+            } catch(e) {}
+
+            if (isValid) {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('res-area').style.display = 'block';
+                startHackSystem();
+                pinInput.value = '';
+            } else {
+                showToast("⛔ WRONG PIN! ACCESS DENIED ⛔");
+                const inp = document.getElementById('pin');
+                inp.style.border = "1px solid #ff3366";
+                setTimeout(() => { inp.style.border = "1px solid #7b2cbf"; }, 600);
+            }
+        }
+
+        function showToast(msg) {
+            let existingToast = document.querySelector('.toast-alert');
+            if(existingToast) existingToast.remove();
+            const toast = document.createElement('div');
+            toast.className = 'toast-alert';
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => { if(toast) toast.remove(); }, 1800);
+        }
+
+        let hackInterval = null;
+        
+        function startHackSystem() {
+            if(hackInterval) clearInterval(hackInterval);
+            const timerElement = document.getElementById('timer-num');
+            const idElement = document.getElementById('full-id');
+            const bsElement = document.getElementById('resBS');
+            const colElement = document.getElementById('resCol');
+            const waitMsg = document.getElementById('wait-msg');
+            
+            const trendElement = document.getElementById('trend-val');
+            const suggestElement = document.getElementById('suggest-val');
+            const histListElement = document.getElementById('fake-hist-list');
+            
+            function updateHackUI() {
+                const now = new Date();
+                const seconds = now.getSeconds();
+                let remaining = seconds < 30 ? (30 - seconds) : (60 - seconds);
+                
+                timerElement.innerText = remaining < 10 ? "0" + remaining : "" + remaining;
+                
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const yyyymmdd = `${year}${month}${day}`;
+                
+                let X = (now.getHours() * 120) + (now.getMinutes() * 2) + (seconds >= 30 ? 2 : 1);
+                idElement.innerText = `ID: ${yyyymmdd}1000${X}`;
+                
+                const pseudoVal = (X * 37 + 7) % 10;
+                const digit = pseudoVal;
+                const isBig = digit >= 5;
+                
+                const textResult = isBig ? "BIG" : "SMALL";
+                
+                // এখানে টেক্সটের সাথে (digit) বা সংখ্যা যুক্ত করে দেওয়া হলো
+                bsElement.innerText = `${textResult} (${digit})`;
+                bsElement.style.color = isBig ? "#ff007f" : "#00ffcc";
+                bsElement.style.textShadow = isBig ? "0 0 8px #ff007f" : "0 0 8px #00ffcc";
+                
+                trendElement.innerText = `${textResult} (${digit})`;
+                suggestElement.innerText = `${textResult} (${digit})`;
+                
+                let colorType = "#ff0055";
+                let resultName = "RED";
+                if (digit === 0 || digit === 5) {
+                    resultName = digit === 0 ? "RED + VIOL" : "GRN + VIOL";
+                    colorType = "#7b2cbf";
+                } else if ([2,4,6,8].includes(digit)) {
+                    resultName = "RED";
+                    colorType = "#ff0055";
+                } else if ([1,3,7,9].includes(digit)) {
+                    resultName = "GREEN";
+                    colorType = "#00ff66";
+                }
+                
+                colElement.innerText = resultName;
+                colElement.style.background = colorType;
+                colElement.style.boxShadow = `0 0 4px ${colorType}`;
+                
+                let histHtml = '';
+                for (let i = 1; i <= 3; i++) {
+                    let prevX = X - i;
+                    let prevSeed = (prevX * 37 + 7) % 10;
+                    let prevBS = prevSeed >= 5 ? "B" : "S";
+                    let hColor = prevSeed % 2 === 0 ? "#ff0055" : "#00ff66";
+                    histHtml += `<div class="hist-item">
+                        <span>${String(prevX).slice(-3)}</span>
+                        <span style="color:${hColor}">${prevBS}(${prevSeed})</span>
+                    </div>`;
+                }
+                histListElement.innerHTML = histHtml;
+                
+                if(remaining <= 5) {
+                    waitMsg.style.display = "flex";
+                } else {
+                    waitMsg.style.display = "none";
+                }
+            }
+            
+            updateHackUI();
+            hackInterval = setInterval(updateHackUI, 300);
+        }
+        
+        // DRAG & DROP CONTROL
+        const dragContainer = document.getElementById('drag-container');
+        let isDragging = false, startMouseX = 0, startMouseY = 0, elementStartX = 0, elementStartY = 0;
+        
+        function getCurrentTranslate() {
+            const style = window.getComputedStyle(dragContainer);
+            const transform = style.transform;
+            if(transform === 'none') return { x: 0, y: 0 };
+            const matrix = transform.match(/matrix.*\((.+)\)/);
+            if(matrix) {
+                const values = matrix[1].split(', ');
+                return { x: parseFloat(values[4]) || 0, y: parseFloat(values[5]) || 0 };
+            }
+            return { x: 0, y: 0 };
+        }
+        
+        function onDragStart(e) {
+            const target = e.target;
+            if(target.tagName === 'INPUT' || target.tagName === 'BUTTON' || target.closest('input') || target.closest('button')) return;
+            e.preventDefault();
+            isDragging = true;
+            const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+            startMouseX = clientX; startMouseY = clientY;
+            const pos = getCurrentTranslate();
+            elementStartX = pos.x; elementStartY = pos.y;
+        }
+        
+        function onDragMove(e) {
+            if(!isDragging) return;
+            e.preventDefault();
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+            let newX = elementStartX + (clientX - startMouseX);
+            let newY = elementStartY + (clientY - startMouseY);
+            
+            const maxX = window.innerWidth - dragContainer.offsetWidth - 5;
+            const minX = -dragContainer.offsetWidth + 40;
+            const maxY = window.innerHeight - dragContainer.offsetHeight - 15;
+            const minY = 5;
+            
+            dragContainer.style.transform = `translate3d(${Math.min(maxX, Math.max(minX, newX))}px, ${Math.min(maxY, Math.max(minY, newY))}px, 0)`;
+        }
+        
+        function onDragEnd() { isDragging = false; }
+        
+        dragContainer.addEventListener('mousedown', onDragStart);
+        window.addEventListener('mousemove', onDragMove);
+        window.addEventListener('mouseup', onDragEnd);
+        dragContainer.addEventListener('touchstart', onDragStart, {passive: false});
+        window.addEventListener('touchmove', onDragMove, {passive: false});
+        window.addEventListener('touchend', onDragEnd);
+        window.addEventListener('load', () => { dragContainer.style.transform = 'translate3d(0px, 0px, 0)'; });
+        document.body.addEventListener('touchmove', (e) => { if (e.touches && e.touches.length >= 2) e.preventDefault(); }, { passive: false });
+    </script>
+</body>
+</html>
